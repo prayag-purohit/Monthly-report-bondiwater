@@ -91,7 +91,7 @@ def get_timeseries_data(unit_id, auth_token):
     }
     
     api_url = f"https://api.prod.simplesubwater.com/v1/unit/{unit_id}/usage?end_date={month_end}&timezone_key=America/New_York&start_date={month_start}"
-    time.sleep(2)
+    #time.sleep(1)
     try:
         response = requests.get(api_url, headers=headers)
         response.raise_for_status()
