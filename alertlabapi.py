@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime, date, time, timedelta
 import calendar
 import pytz
-import monthly_report
+import monthlyreport as mr
 
 def get_token():
   request_url = "https://api.alertaq.com/api/v4/public/login"
@@ -82,13 +82,14 @@ def get_property_id(token, property_name):
         properties = locations.get('dataModel', [])  # Safely access 'dataModel'
         
         # Find the matching property
-        matching_entries = [entry for entry in properties if entry.get('name') == property_name]
+        matching_entries = [entry for entry in properties if entry.get('name') == str(property_name)]
         
         if matching_entries:
             return matching_entries[0]['_id']  # Return the first match
         
-        print(f"Property '{property_name}' not found.")
-        return None
+        else:
+            print(f"Property '{property_name}' not found.")
+            return None
     
     except requests.exceptions.RequestException as e:
         print(f"Error fetching property data: {e}")
@@ -104,6 +105,17 @@ def get_sensorlist(token, bgo_id):
     flowie_sensors = sensor_list_df[sensor_list_df['friendlyType'] == "Flowie-O"]
 
     return flowie_sensors
+
+def get_firstandlastdayofpreviousmonth():
+    today = datetime.today()
+    first_day_current_month = today.replace(day=1)
+    last_day_previous_month = first_day_current_month - timedelta(days=1)
+    first_day_previous_month = last_day_previous_month.replace(day=1)
+    
+    month_start = first_day_previous_month.strftime('%Y-%m-%d')
+    month_end = last_day_previous_month.strftime('%Y-%m-%d')
+    
+    return month_start, month_end
 
 def get_timeseries_data(token, sensor_id, sensorstoquery): 
     rate = "d"

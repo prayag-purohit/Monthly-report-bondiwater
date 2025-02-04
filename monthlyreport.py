@@ -1,5 +1,6 @@
-import Alertlab_api as atapi
+import alertlabapi as atapi
 import pandas as pd
+from datetime import datetime, timedelta
 
 def get_firstandlastdayofpreviousmonth():
     today = datetime.today()
