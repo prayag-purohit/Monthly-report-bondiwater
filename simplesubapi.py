@@ -1,6 +1,7 @@
 import requests
 import json
-
+import time
+from datetime import datetime, date, timedelta
 
 def get_token():
     """
@@ -45,10 +46,13 @@ def get_property_list(token):
         list: A list of property names.
     """
     header = {
-        "Authorization": token
+        "Authorization": token,
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Cache-Control": "no-cache"
     }
 
-    url = "https://api.alertlab.com/properties"
+    url = "https://api.prod.simplesubwater.com/v1/structure?"
 
     response = requests.get(url, headers=header)
     locations = response.json()
@@ -82,14 +86,18 @@ def get_timeseries_data(unit_id, auth_token):
 
     month_start, month_end = get_firstandlastdayofpreviousmonth()
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {auth_token}",
         "Content-Type": "application/json"
     }
     
     api_url = f"https://api.prod.simplesubwater.com/v1/unit/{unit_id}/usage?end_date={month_end}&timezone_key=America/New_York&start_date={month_start}"
-
-    response = requests.get(api_url, headers=headers)
-
+    time.sleep(2)
+    try:
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        print(err)
+        return None
     timeseries = response.json()
     return timeseries
 

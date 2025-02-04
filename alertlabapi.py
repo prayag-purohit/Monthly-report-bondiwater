@@ -1,8 +1,9 @@
 import requests
 import json
 import pandas as pd 
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, timedelta
 import pytz
+import time
 
 def get_token():
   request_url = "https://api.alertaq.com/api/v4/public/login"
@@ -85,7 +86,7 @@ def get_property_id(token):
             return matching_entries[0]['_id']  # Return the first match
         
         else:
-            print(f"Property '{property_name}' not found.")
+            print(f"Property not found.")
             return None
     
     except requests.exceptions.RequestException as e:

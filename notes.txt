@@ -1,2 +1,2 @@
-So we have to currently change the property name in the alertlabapi.py file every time
+So we have to currently change the property name in the alertlabapi.py file every time - line 82 
 The monthly report is the main file. At 2/3/2025 we finished the alert lab api tuning

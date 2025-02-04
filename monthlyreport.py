@@ -2,6 +2,7 @@ import alertlabapi as atapi
 import simplesubapi as ssapi
 import pandas as pd
 from datetime import datetime, timedelta
+import time
 
 
 ### Common functions 
@@ -29,7 +30,6 @@ def mergewithmasterdf(master_df, timeseries_df):
 
 ### Get data from alert labs
 token = atapi.get_token()
-property_to_query = 'BGO Pen Centre'
 bgo_id = atapi.get_property_id(token)
 if bgo_id is None:
     raise ValueError("No valid location found. Exiting.")
@@ -40,13 +40,14 @@ sensorstoquery = dict(zip(sensor_list_df['_id'], sensor_list_df['name']))  # Map
 master_df = get_master_df()
 for sensor_id in sensorstoquery.keys():
     timeseries_df = atapi.get_timeseries_data(token, sensor_id, sensorstoquery)
+    time.sleep(1)
     # Merge the timeseries data with the master dataframe
     master_df = mergewithmasterdf(master_df, timeseries_df)
 
 ### Get simpleSub data
 ss_token = ssapi.get_token()
 ss_properties = ssapi.get_property_list(ss_token)
-property_name = 'Pen Centre'
+property_name = 'Pen Centre' #### Change property name here
 unit_ids = ssapi.get_unit_ids_for_property(ss_properties, property_name)
 
 
