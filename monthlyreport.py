@@ -27,7 +27,7 @@ def mergewithmasterdf(master_df, timeseries_df):
 
 token = atapi.get_token()
 property_to_query = 'BGO Pen Centre'
-bgo_id = atapi.get_property_id(token, 'BGO Pen Centre')
+bgo_id = atapi.get_property_id(token)
 if bgo_id is None:
     raise ValueError("No valid location found. Exiting.")
 
@@ -38,6 +38,4 @@ master_df = get_master_df()
 for sensor_id in sensorstoquery.keys():
     timeseries_df = atapi.get_timeseries_data(token, sensor_id, sensorstoquery)
     master_df = mergewithmasterdf(master_df, timeseries_df)
-
-
 

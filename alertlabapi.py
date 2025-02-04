@@ -2,9 +2,7 @@ import requests
 import json
 import pandas as pd 
 from datetime import datetime, date, time, timedelta
-import calendar
 import pytz
-import monthlyreport as mr
 
 def get_token():
   request_url = "https://api.alertaq.com/api/v4/public/login"
@@ -19,7 +17,6 @@ def get_token():
   token = login_response['token']
   return token
 
-import requests
 
 def get_property_name_list(token):
     """
@@ -61,7 +58,7 @@ def get_property_name_list(token):
         return []
 
 
-def get_property_id(token, property_name):
+def get_property_id(token):
     """
     Fetches the property ID for a given property name from the AlertAQ API.
 
@@ -82,8 +79,8 @@ def get_property_id(token, property_name):
         properties = locations.get('dataModel', [])  # Safely access 'dataModel'
         
         # Find the matching property
-        matching_entries = [entry for entry in properties if entry.get('name') == str(property_name)]
-        
+        matching_entries = [entry for entry in properties if entry.get('name') == 'BGO Pen Center']
+        print(matching_entries)
         if matching_entries:
             return matching_entries[0]['_id']  # Return the first match
         
@@ -122,9 +119,9 @@ def get_timeseries_data(token, sensor_id, sensorstoquery):
     series = "W"
     month_start, month_end = get_firstandlastdayofpreviousmonth()
     eastern = pytz.timezone('America/New_York')
-    start_time_unix = int(eastern.localize(datetime.strptime(month_start, '%Y-%m-%d')).timestamp()) - 1000
-    end_time_unix = int(eastern.localize(datetime.strptime(month_end, '%Y-%m-%d')).timestamp()) - 1000
-    end_time_unix = int(datetime.strptime(month_end, '%Y-%m-%d').timestamp())
+    start_time_unix = int(eastern.localize(datetime.strptime(month_start, '%Y-%m-%d')).timestamp())
+    end_time_unix = int(eastern.localize(datetime.strptime(month_end, '%Y-%m-%d')).timestamp()) 
+    
     timeseriesurl = f"https://api.alertaq.com/api/v4/public/timeseries?from={start_time_unix}&to={end_time_unix}&rate={rate}&series={series}&sensorID={sensor_id}"
 
     response = requests.get(timeseriesurl, headers={"Token": token})
