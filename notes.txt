@@ -1,2 +1,8 @@
 So we have to currently change the property name in the alertlabapi.py file every time - line 82 
-The monthly report is the main file. At 2/3/2025 we finished the alert lab api tuning
+The SSandAL is the main file. alertlabapi and simplesubapi are functions for respective apis
+
+Issues: 
+- Does not get 1st of the months data ### done
+- get_firstandlastdateofpreviousmonth is called a lot. Have to make month_start, and end global variables and feed them to both timeseries function ### done
+- turn alert lab data into numbers and round them    ### done 
+- account for timezone offset in alertlabapi file by 5 hours. 

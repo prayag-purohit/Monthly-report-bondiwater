@@ -3,20 +3,24 @@ import json
 import pandas as pd 
 from datetime import datetime, date, timedelta
 import pytz
+import os
 import time
 
 def get_token():
-  request_url = "https://api.alertaq.com/api/v4/public/login"
-  request_body = {
-    "user": "prayagpurohit1@gmail.com",
-    "password": "8238709119Pp!",
-  }
+    """Get authentication token for AlertLab API."""
+    request_url = "https://api.alertaq.com/api/v4/public/login"
+    request_body = {
+        "user": os.getenv("ALERTLAB_USER"),
+        "password": os.getenv("ALERTLAB_PASSWORD"),
+    }
 
-  response = requests.post(request_url,json=request_body)
+    response = requests.post(request_url, json=request_body)
 
-  login_response=json.loads(response.text)
-  token = login_response['token']
-  return token
+    if response.status_code == 200:
+        return response.json().get("token")
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
+        return None
 
 
 def get_property_name_list(token):
@@ -59,7 +63,7 @@ def get_property_name_list(token):
         return []
 
 
-def get_property_id(token):
+def get_property_id(token, property_name):
     """
     Fetches the property ID for a given property name from the AlertAQ API.
 
@@ -80,8 +84,8 @@ def get_property_id(token):
         properties = locations.get('dataModel', [])  # Safely access 'dataModel'
         
         # Find the matching property
-        matching_entries = [entry for entry in properties if entry.get('name') == 'BGO Pen Center']
-        print(matching_entries)
+        matching_entries = [entry for entry in properties if entry.get('name') == property_name]
+        #print(matching_entries)
         if matching_entries:
             return matching_entries[0]['_id']  # Return the first match
         
@@ -93,36 +97,30 @@ def get_property_id(token):
         print(f"Error fetching property data: {e}")
         return None
 
-def get_sensorlist(token, bgo_id):
+def get_sensorlist(token, property_id):
     # Get locations by id
-    sensors_url = f"https://api.alertaq.com/api/v4/public/sensors?locationID={bgo_id}"
+    sensors_url = f"https://api.alertaq.com/api/v4/public/sensors?locationID={property_id}"
     response = requests.get(sensors_url, headers={"Token": token})
     sensors = json.loads(response.text)
     sensor_list_df = pd.DataFrame(sensors['dataModel'])
-    # Filter only "Flowie-O" sensors
-    flowie_sensors = sensor_list_df[sensor_list_df['friendlyType'] == "Flowie-O"]
+    # Filter only "Flowie-O" sensors, and Flowie sensors
+    flowie_sensors = sensor_list_df[(sensor_list_df['friendlyType'] == "Flowie-O") | (sensor_list_df['friendlyType'] == "Flowie")]
 
     return flowie_sensors
 
-def get_firstandlastdayofpreviousmonth():
-    today = datetime.today()
-    first_day_current_month = today.replace(day=1)
-    last_day_previous_month = first_day_current_month - timedelta(days=1)
-    first_day_previous_month = last_day_previous_month.replace(day=1)
-    
-    month_start = first_day_previous_month.strftime('%Y-%m-%d')
-    month_end = last_day_previous_month.strftime('%Y-%m-%d')
-    
-    return month_start, month_end
 
-def get_timeseries_data(token, sensor_id, sensorstoquery): 
+def get_timeseries_data(token, sensor_id, sensorstoquery, month_start, month_end): 
     rate = "d"
     series = "W"
-    month_start, month_end = get_firstandlastdayofpreviousmonth()
+    #month_start, month_end = get_firstandlastdayofpreviousmonth()
+    # Convert to datetime objects and add timezone
     eastern = pytz.timezone('America/New_York')
-    start_time_unix = int(eastern.localize(datetime.strptime(month_start, '%Y-%m-%d')).timestamp())
-    end_time_unix = int(eastern.localize(datetime.strptime(month_end, '%Y-%m-%d')).timestamp()) 
+    start_dt = eastern.localize(datetime.strptime(month_start, "%Y-%m-%d"))
+    end_dt = eastern.localize(datetime.strptime(month_end, "%Y-%m-%d"))
     
+    start_time_unix = int(start_dt.timestamp())
+    end_time_unix = int(end_dt.timestamp())
+        
     timeseriesurl = f"https://api.alertaq.com/api/v4/public/timeseries?from={start_time_unix}&to={end_time_unix}&rate={rate}&series={series}&sensorID={sensor_id}"
 
     response = requests.get(timeseriesurl, headers={"Token": token})
@@ -138,5 +136,11 @@ def get_timeseries_data(token, sensor_id, sensorstoquery):
 
     # Convert 'Date' column to datetime
     timeseries_df['Date'] = pd.to_datetime(timeseries_df['Date'], unit='ms')
+    # Identify the last column dynamically
+    last_column = timeseries_df.columns[-1]
+
+# Convert the last column to float and round to two decimals
+    timeseries_df[last_column] = timeseries_df[last_column].astype(float).round(2)
+
     return timeseries_df
     

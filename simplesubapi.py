@@ -2,19 +2,10 @@ import requests
 import json
 import time
 from datetime import datetime, date, timedelta
+import os
 
 def get_token():
-    """
-    Function to retrieve the authentication token from the API.
-
-    Parameters:
-        api_url (str): The authentication endpoint URL.
-        client_id (str): Client ID for authentication.
-        client_secret (str): Client Secret for authentication.
-
-    Returns:
-        str: The authentication token.
-    """
+    """Get authentication token for SimpleSub API."""
     header = {
         "Content-Type": "application/x-amz-json-1.1",
         "X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth"
@@ -23,17 +14,25 @@ def get_token():
     payload = {
         "AuthFlow": "USER_PASSWORD_AUTH",
         "AuthParameters": {
-            "USERNAME": "alerts.watercontrols@gmail.com",
-            "PASSWORD": "theH20m@sters"
+            "USERNAME": os.getenv("SIMPLESUB_USERNAME"),
+            "PASSWORD": os.getenv("SIMPLESUB_PASSWORD")
         },
-        "ClientId": "3jkng9ho3h3l8a93h5bfg4oml2"
+        "ClientId": os.getenv("SIMPLESUB_CLIENT_ID")
     }
 
     url = "https://cognito-idp.us-east-2.amazonaws.com/"
 
-    response = requests.post(url, headers=header, data=json.dumps(payload))
-    response_data = response.json()
-    return response_data["AuthenticationResult"]["IdToken"]
+    response = requests.post(url, headers=header, json=payload)
+
+    if response.status_code == 200:
+        try:
+            return response.json()["AuthenticationResult"]["IdToken"]
+        except KeyError:
+            print(f"Unexpected response: {response.json()}")
+            return None
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
+        return None
 
 def get_property_list(token):
     """
@@ -58,17 +57,6 @@ def get_property_list(token):
     locations = response.json()
     return locations
 
-def get_firstandlastdayofpreviousmonth():
-    today = datetime.today()
-    first_day_current_month = today.replace(day=1)
-    last_day_previous_month = first_day_current_month - timedelta(days=1)
-    first_day_previous_month = last_day_previous_month.replace(day=1)
-    
-    month_start = first_day_previous_month.strftime('%Y-%m-%d')
-    month_end = last_day_previous_month.strftime('%Y-%m-%d')
-    
-    return month_start, month_end
-
 def get_unit_ids_for_property(data, property_name):
     unit_ids = []
     
@@ -82,9 +70,9 @@ def get_unit_ids_for_property(data, property_name):
     
     return unit_ids
 
-def get_timeseries_data(unit_id, auth_token):
+def get_timeseries_data(unit_id, auth_token, month_start, month_end):
 
-    month_start, month_end = get_firstandlastdayofpreviousmonth()
+    #month_start, month_end = get_firstandlastdayofpreviousmonth()
     headers = {
         "Authorization": f"Bearer {auth_token}",
         "Content-Type": "application/json"

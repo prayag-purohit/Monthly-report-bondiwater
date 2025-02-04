@@ -2,3 +2,6 @@ __pycache__
 .venv
 /test.ipynb
 /csvs
+alert_lab_property_list.txt
+*.env
+/AWSLambdafunctions/LayerStuff/*
