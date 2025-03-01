@@ -3,6 +3,7 @@ import alertlabapi as atapi
 import common_functions as cf
 import time
 import pandas as pd
+from collections import defaultdict
 
 ### Main code:
 month_start, month_end = cf.get_firstandlastdayofpreviousmonth()
@@ -32,7 +33,7 @@ unit_ids = ssapi.get_unit_ids_for_property(ss_properties, property_name)
 for unit in unit_ids:
     try:
         timeseries = ssapi.get_timeseries_data(unit, ss_token, month_start=month_start, month_end=month_end)
-        time.sleep(1)
+        time.sleep(0.5)
         if timeseries is None:
             print(f"Warning: No timeseries data returned for unit {unit}. Skipping...")
             continue  # Skip to the next unit
@@ -46,10 +47,19 @@ for unit in unit_ids:
 
         # Extract daily usage data safely
         if "devices" not in timeseries or not timeseries["devices"]:
-            print(f"Warning: No devices data found for unit {unit}. Skipping...")
+            print(f"Warning: No devices data found for unit {unit_name}. Skipping...")
             continue
         
-        daily_usage = timeseries["devices"][0].get("daily_usages", [])
+        if len(timeseries['devices']) > 1:
+            mergeddata = defaultdict(float)
+            for device in timeseries['devices']:
+                for entry in device['daily_usages']:
+                    mergeddata[entry['date']] += entry['volume']
+                    
+            daily_usage = [{'date': k, 'volume': v} for k, v in mergeddata.items()]
+        else:
+            daily_usage = timeseries["devices"][0].get("daily_usages", [])
+            
         if not daily_usage:
             print(f"Warning: No daily usage data for unit {unit}. Skipping...")
             continue

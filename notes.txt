@@ -1,8 +1,33 @@
-So we have to currently change the property name in the alertlabapi.py file every time - line 82 
-The SSandAL is the main file. alertlabapi and simplesubapi are functions for respective apis
+I'm using it to create monthly reports every month to save a lot of manual effort. The SSandAL_local_run.py is the main file. alertlabapi and simplesubapi are functions for respective apis
 
-Issues: 
+
+Current set up is that I have a lambda function in aws for each property I query (8 properties). The lambdas have layers which contain pandas, numpy, requests, and also the helper modules (.py files). 
+The templates for lambda functions are stored in the AWSLambdafunction dir for each scenario. There are three scenarios 1)Pull data from Simplesub only 2)Pull data from Alertlab only 3)Pull data from both of them.
+
+Lambda is called by Zoho flow with a function url. Lambda returns a csv string that Zoho converts it in a file and sends it to my client. 
+
+
+Resolved Issues: 
 - Does not get 1st of the months data ### done
 - get_firstandlastdateofpreviousmonth is called a lot. Have to make month_start, and end global variables and feed them to both timeseries function ### done
 - turn alert lab data into numbers and round them    ### done 
-- account for timezone offset in alertlabapi file by 5 hours. 
+- account for timezone offset in alertlabapi file by 5 hours. ### Seems to be problem on the alert lab side
+- Simplesub was hardcoded to fetch the first device. Used a loop to include all the devices for units.
+- In scenario three the lambda function was running for a looong time. Used async functions to get data from both of them quickly. 
+
+Current issues:
+- No logging mechanisms in AWS. So debugging is hard
+- There are fucntions for each property in Lambda, so everytime if I make a change in one function, I have to make changes in each function. Similarly, there has to be 8 functions in Zoho. 
+    - Since there are so many functions, naming conventions were important. So in lambda and zoho the project is tagged as 'MR project' to make quick seraches. 
+- Lambda functions are called with public urls, so anyone can call those functions to harras us. Need to add a authorization. 
+
+Ideapad: 
+- Could be combined with alerts data from Zoho to give bob a holistic analysis of the propertiy's alert dates. 
+
+
+
+
+
+
+
+

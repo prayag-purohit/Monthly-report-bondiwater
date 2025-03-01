@@ -16,11 +16,11 @@ def get_token():
 
     response = requests.post(request_url, json=request_body)
 
-    if response.status_code == 200:
-        return response.json().get("token")
+    data = response.json()
+    if "token" in data:
+        return data["token"]
     else:
-        print(f"Error: {response.status_code}, {response.text}")
-        return None
+        raise ValueError("Token missing in response")
 
 
 def get_property_name_list(token):
