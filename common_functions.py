@@ -27,9 +27,25 @@ def get_master_df():
     master_df['Date'] = pd.date_range(start=month_start, end=month_end)
     return master_df
 
-def mergewithmasterdf(master_df, timeseries_df):
+def mergewithmasterdf(master_df, timeseries_df, unit='liters'):
+    """
+    Merges the timeseries DataFrame with the master DataFrame.
+    Converts the volume data to liters if the unit is 'gallons'.
+    
+    Parameters:
+        master_df (pd.DataFrame): The master DataFrame.
+        timeseries_df (pd.DataFrame): The timeseries DataFrame to merge.
+        unit (str): The unit of the volume data ('liters' or 'gallons').
+        
+    Returns:
+        pd.DataFrame: The updated master DataFrame.
+    """
+    if unit == 'gallons':
+        volume_col = [col for col in timeseries_df.columns if col != 'Date'][0]
+        timeseries_df[volume_col] = timeseries_df[volume_col] * 3.78541
     master_df = master_df.merge(timeseries_df, on='Date', how='left')
     return master_df
+
 
 def add_summary_rows(master_df, cost_per_m3=4.8401):
     """
